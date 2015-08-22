@@ -29,7 +29,8 @@ function prereq() {
 prereq x mkfs.vfat dosfstools
 prereq x mcopy mtools
 prereq x syslinux
-prereq f /usr/lib/syslinux/mboot.c32 syslinux
+prereq f /usr/lib/syslinux/modules/bios/mboot.c32 syslinux
+prereq f /usr/lib/syslinux/modules/bios/libcom32.c32 syslinux
  
  
 # create image
@@ -41,8 +42,9 @@ mkfs.vfat "$harddisk_image" || fail "could not format harddisk.img"
 # install syslinux
 syslinux "$harddisk_image" || fail "could not install syslinux"
  
-# copy over mboot.c32 (required for Multiboot)
-mcopy -i "$harddisk_image" /usr/lib/syslinux/mboot.c32 ::mboot.c32 || fail "could not copy over mboot.c32"
+# copy over mboot.c32 and libcom32.c32 (required for Multiboot)
+mcopy -i "$harddisk_image" /usr/lib/syslinux/modules/bios/mboot.c32 ::mboot.c32 || fail "could not copy over mboot.c32"
+mcopy -i "$harddisk_image" /usr/lib/syslinux/modules/bios/libcom32.c32 ::libcom32.c32 || fail "could not copy over libcom32.c32"
  
 # copy over kernel
 mcopy -i "$harddisk_image" "$kernel_binary" ::kernel.bin || fail "could not copy over kernel"
@@ -52,4 +54,3 @@ echo '
 TIMEOUT 1
 DEFAULT mboot.c32 kernel.bin '$kernel_args'
 ' | mcopy -i "$harddisk_image" - ::syslinux.cfg
- 
