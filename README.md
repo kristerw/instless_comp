@@ -1,5 +1,5 @@
 # Instruction-less computation
-This is an implementation of the ideas in the paper “[The Page-Fault Weird Machine: Lessons in Instruction-less Computation](https://www.usenix.org/conference/woot13/workshop-program/presentation/bangert)” by J. Bangert et al., where it is shown that the IA-32 MMU and interrupt handling is Turing complete, so you can execute code without executing any CPU instructions!
+This is an implementation of the ideas in the paper “[The Page-Fault Weird Machine: Lessons in Instruction-less Computation](https://www.usenix.org/conference/woot13/workshop-program/presentation/bangert)” by J. Bangert et al., where it is shown that the IA-32 fault handling mechanism is Turing complete, so you can run programs without executing any CPU instructions!
 
 I did this implementation in order to get an understanding of how it works in detail – the paper does not describe all the boring parts needed to get this working, and the [trapcc](https://github.com/jbangert/trapcc) implementation from the paper is IMHO hard to understand (it generates all the page tables etc. by ruby scrips, and it need to do global analysis with graph coloring etc. in order to generate working programs). My implementation tries to be easier to understand by choosing a less efficient instruction encoding that eliminates the need of the global analysis, so each instruction can be generated individually.
 
@@ -20,6 +20,17 @@ gen_movdbz(7, 3, 3, 6, 6);    // L8: movdbz r3, r3, L7, L7
 ```
 
 and it should be easy to follow how each instruction is generated as page tables etc. I'll describe the details of the construct in two blog posts (overview and details) the coming week...
+
+###Building and running the software
+Building the software is as easy as to run
+```
+make
+```
+which builds a kernel that you need to run on the bochs emulator (or real hardware). It may be possible to use other emulators, but the paper claims that none implements the correct fault behaviour (but that may have been fixed since the paper was written...)
+
+I tested to build on a clean Ubuntu 14.04.3 LTS 64-bit desktop, and you only need to install `bochs-sdl` to be ready to go.
+
+There is a bochs configuration file in the repository, so running bochs in the source code directory should use it autimatically. Bochs will complain that the it cannot detect the disk geometry, but choosing "continue" makes it proceed...
 
 ###Assembler syntax
 The constructed machine is a "one instruction set computer", so the assembler has only one instruction: `movdbz`.
