@@ -19,7 +19,7 @@ gen_movdbz(6, 2, 2, 7, -1);   // L7: movdbz r2, r2, L8, exit
 gen_movdbz(7, 3, 3, 6, 6);    // L8: movdbz r3, r3, L7, L7
 ```
 
-and it should be easy to follow how each instruction is generated as page tables etc. I'll describe the details of the construct in two blog posts (overview and details) the coming week...
+and it should be easy to follow how each instruction is generated as page tables etc. I'll describe the details of the construct in two blog posts ([overview](http://kristerw.blogspot.se/2015/08/instruction-less-computation.html) and details) the coming week...
 
 ###Building and running the software
 Building the software is as easy as to run
