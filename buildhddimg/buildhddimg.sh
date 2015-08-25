@@ -5,7 +5,6 @@
  
 # ---- begin config params ----
  
-harddisk_image_size=$((4*1024*1024)) # 4 megabytes
 harddisk_image="harddisk.img"
 qemu_cmdline="qemu -monitor stdio"
 kernel_args=""
@@ -33,7 +32,7 @@ prereq f /usr/lib/syslinux/mboot.c32 syslinux
  
  
 # create image
-dd if=/dev/zero of="$harddisk_image" bs=4k count=$((harddisk_image_size/4096)) 2>/dev/null
+dd if=/dev/zero of="$harddisk_image" bs=512 count=8064 # ~4 megabytes
  
 # format image
 mkfs.vfat "$harddisk_image" || fail "could not format harddisk.img"

@@ -30,7 +30,7 @@ which builds a kernel that you need to run on the bochs emulator (or real hardwa
 
 I tested to build on a clean Ubuntu 14.04.3 LTS 64-bit desktop, and you only need to install `bochs-sdl` to be ready to go.
 
-There is a bochs configuration file in the repository, so running bochs in the source code directory should use it autimatically. Bochs will complain that the it cannot detect the disk geometry, but choosing "continue" makes it proceed...
+There is a bochs configuration file in the repository, so running bochs in the source code directory should use it autimatically.
 
 ###Assembler syntax
 The constructed machine is a "one instruction set computer", so the assembler has only one instruction: `movdbz`.
