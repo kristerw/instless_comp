@@ -32,6 +32,9 @@ I tested to build on a clean Ubuntu 14.04.3 LTS 64-bit desktop, and you only nee
 
 There is a bochs configuration file in the repository, so running bochs in the source code directory should use it autimatically.
 
+###Changing the movdbz program
+The example movdbz program in this repository can be found in [movdbz-addition.s](movdbz-addition.s), and it implements addition as described in the [blog post](http://kristerw.blogspot.se/2015/08/instruction-less-computation.html). You can change this to your own file by updating the `MOVDBZ_PROG` variable in the [Makefile](Makefile), and updating [run_movdbz_program.c](run_movdbz_program.c) to set up the input/output for your program.
+
 ###Assembler syntax
 The constructed machine is a "one instruction set computer", so the assembler has only one instruction: `movdbz`.
 
