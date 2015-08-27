@@ -264,7 +264,7 @@ generate_idt(
 }
 
 
-/* Populate the instruction page (i.e. the first part of the TSS).  */
+/* Populate the instruction page (i.e. the first part of the "source TSS"). */
 static void
 generate_inst_page(
     unsigned int pd_page,
@@ -297,8 +297,10 @@ inst_to_gdte(
 }
 
 
+/* Map the "destination TSS" (GDT page and destination register) into the
+ * address space. */
 static void
-map_inst_gdt(
+map_dest_tss(
     unsigned int pd_page,
     int inst_nr,
     int reg_nr)
@@ -313,10 +315,10 @@ map_inst_gdt(
 }
 
 
-/* Map the pages for the destination instruction and input register into
- * the memory map defined by the page directory.  */
+/* Map the "source TSS" (instruction page and source register) into the
+ * address space. */
 static void
-map_inst_args(
+map_src_tss(
     unsigned int pd_page,
     int inst_nr,
     int reg_nr)
@@ -349,11 +351,11 @@ gen_inst(
 	       inst_to_gdte(dest1_inst_nr), inst_to_gdte(dest2_inst_nr));
   generate_inst_page(pd_page, 0x400000 + 0x010000 * inst_bank - 0x30);
 
-  map_inst_gdt(pd_page, inst_nr, dest_reg);
+  map_dest_tss(pd_page, inst_nr, dest_reg);
   if (dest1_inst_nr >= 0)
-    map_inst_args(pd_page, dest1_inst_nr, dest1_input_reg);
+    map_src_tss(pd_page, dest1_inst_nr, dest1_input_reg);
   if (dest2_inst_nr >= 0)
-    map_inst_args(pd_page, dest2_inst_nr, dest2_input_reg);
+    map_src_tss(pd_page, dest2_inst_nr, dest2_input_reg);
 }
 
 
@@ -411,7 +413,7 @@ setup_movdbz_program(void)
   /* Set up an initial page table and inst needed to call the first
    * instruction in the movdbz program.  */
   generate_pagetable(INIT_0);
-  map_inst_args(INIT_0, 0, REG_CONSTANT_ONE);
+  map_src_tss(INIT_0, 0, REG_CONSTANT_ONE);
 
   init_gdt(PROGPAGE2VIRT(GDT_PAGE0));
 }
