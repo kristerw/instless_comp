@@ -7,10 +7,14 @@
 #define STACK_ADDRESS       0x00000000
 #define INST_ADDRESS        0x00400000
 #define X86_BASE_ADDRESS    0x00c00000
-#define IDT_ADDRESS         0x01000000
 #define GDT_ADDRESS         0x01800000
 #define X86_PD_ADDRESS      0x07c00000
 #define PROG_BASE_ADDR      0x08000000
+
+/* The IDT is a part of the instruction, and is mapped as the first page
+ * in the instruction range. */
+#define IDT_ADDRESS         (INST_ADDRESS)
+
 
 #define PROG_BASE_PAGE ((PROG_BASE_ADDR) >> 12)
 #define PROGPAGE2VIRT(x) ((unsigned int *)((PROG_BASE_ADDR) + ((x) << 12)))
@@ -41,19 +45,17 @@ extern void set_gdtr(unsigned int base_addr, unsigned short table_limit);
 #define GDT_PAGE3            6
 #define INIT_0               7  // PD
 #define INIT_1               8  // PT for INST_ADDRESS
-#define INIT_2               9  // PT for IDT_ADDRESS
-#define INIT_3              10  // INST
-#define REG_CONST_ONE_PAGE  11  // Must be (REG_R0_PAGE - 2).
-#define REG_DISCARD_PAGE    12  // Must be (REG_R0_PAGE - 1).
-#define REG_R0_PAGE         13
+#define INIT_2               9  // INST
+#define REG_CONST_ONE_PAGE  10  // Must be (REG_R0_PAGE - 2).
+#define REG_DISCARD_PAGE    11  // Must be (REG_R0_PAGE - 1).
+#define REG_R0_PAGE         12
 
-/* Each instruction is encoded in five pages.  */
-#define PAGES_PER_INST       5
+/* Each instruction is encoded in four pages.  */
+#define PAGES_PER_INST       4
 #define PD_OFF               0
 #define INST_PT_OFF          1
-#define IDT_PT_OFF           2
-#define INST_OFF             3
-#define IDT_OFF              4
+#define INST_OFF             2
+#define IDT_OFF              3
 
 /* The register numbers for the two special registers (i.e. the two registers
  * before r0).  */
@@ -224,16 +226,13 @@ generate_pagetable(
   p0[0] = PG_P | PG_W | ((PROG_BASE_PAGE + STACK_PAGE) << 12);
   pde_ptr[0] = PG_P | PG_W | ((PROG_BASE_PAGE + STACK_PT_PAGE) << 12);
 
-  /* Map the current instruction at 0x00400000. */
+  /* Map the current instruction (including IDT) at 0x00400000. */
+  unsigned int *p1 = PROGPAGE2VIRT(pd_page + INST_PT_OFF);
+  p1[0] = PG_P | PG_W | ((PROG_BASE_PAGE + pd_page + IDT_OFF) << 12);
   pde_ptr[1] = PG_P | PG_W | ((PROG_BASE_PAGE + pd_page + INST_PT_OFF) << 12);
 
   /* Map the memory used for the x86 at 0x00c00000. */
   pde_ptr[3] = PG_P | PG_PS | PG_W | (3 << 22);
-
-  /* Map IDT at 0x01000000. */
-  unsigned int *p4 = PROGPAGE2VIRT(pd_page + IDT_PT_OFF);
-  p4[0] = PG_P | PG_W | ((PROG_BASE_PAGE + pd_page + IDT_OFF) << 12);
-  pde_ptr[4] = PG_P| PG_W | ((PROG_BASE_PAGE + pd_page + IDT_PT_OFF) << 12);
 
   /* Map the GDT on four consecutive pages at 0x01800000. */
   unsigned int *p6 = PROGPAGE2VIRT(GTD_PT_PAGE);
