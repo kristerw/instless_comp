@@ -16,11 +16,12 @@
 #define IDT_ADDRESS         (INST_ADDRESS)
 
 
+/* Page number for the first page in the movdbz program, and translation
+ * to virtual addresses for the program's pages.
+ *
+ * This address range use direct mapping, so the translation is trivial. */
 #define PROG_BASE_PAGE ((PROG_BASE_ADDR) >> 12)
 #define PROGPAGE2VIRT(x) ((unsigned int *)((PROG_BASE_ADDR) + ((x) << 12)))
-
-static unsigned int x86_tss[26];
-extern void set_gdtr(unsigned int base_addr, unsigned short table_limit);
 
 
 /* The movdbz binary starts with 12 pages containing
@@ -67,6 +68,10 @@ static void gen_reg(int, unsigned int);
 static void gen_movdbz(int, int, int, int, int);
 
 #include "generated-prog.c"
+
+
+static unsigned int x86_tss[26];
+extern void set_gdtr(unsigned int base_addr, unsigned short table_limit);
 
 
 #define PG_P  0x001 // Present (i.e. all other ignored if this is not set)
