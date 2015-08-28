@@ -23,7 +23,7 @@ static unsigned int x86_tss[26];
 extern void set_gdtr(unsigned int base_addr, unsigned short table_limit);
 
 
-/* The movdbz binary starts with 13 pages containing
+/* The movdbz binary starts with 12 pages containing
  * - Stack PT and a page for the actual stack.
  * - The GTD PT and four pages for the GDT.
  * - An initial partial instruction whose PD is used when calling the
