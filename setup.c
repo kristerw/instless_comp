@@ -242,14 +242,35 @@ generate_pagetable(
 }
 
 
+static unsigned int
+inst_to_bank(
+    int inst_nr)
+{
+  return (inst_nr % 3) + 1;
+}
+
+
+static unsigned int
+inst_to_gdte(
+    int inst_nr)
+{
+  if (inst_nr < 0)
+    return 0x18;
+  else
+    return inst_to_bank(inst_nr) << 12 | 0x0ff8;
+}
+
+
 /* Populate the IDT with the destination instructions. */
 static void
-generate_idt(
+generate_idt_page(
     unsigned int pd_page,
-    unsigned int tss_seg_selector1,
-    unsigned int tss_seg_selector2)
+    int dest1_inst_nr,
+    int dest2_inst_nr)
 {
   unsigned int *p = PROGPAGE2VIRT(pd_page + IDT_OFF);
+  unsigned int tss_seg_selector1 = inst_to_gdte(dest1_inst_nr);
+  unsigned int tss_seg_selector2 = inst_to_gdte(dest2_inst_nr);
 
   /* #DF - Double Fault */
   p[16] = tss_seg_selector2 << 16;
@@ -267,32 +288,15 @@ generate_idt(
 static void
 generate_inst_page(
     unsigned int pd_page,
-    unsigned int base)
+    int inst_nr)
 {
   unsigned int *p = PROGPAGE2VIRT(pd_page + INST_OFF);
+  unsigned int inst_bank = inst_to_bank(inst_nr);
+  unsigned int base = 0x400000 + 0x010000 * inst_bank - 0x30;
   p[1019] = (PROG_BASE_PAGE + pd_page) << 12;  /* CR3 */
   p[1020] = 0xfffefff;  /* EIP */
   p[1021] = read_eflags();  /* EFLAGS */
   encode_gdte(&p[1022], 137, base, 0x0fffffff);  /* EAX and EDX */
-}
-
-
-static unsigned int
-inst_to_bank(
-    int inst_nr)
-{
-  return (inst_nr % 3) + 1;
-}
-
-
-static unsigned int
-inst_to_gdte(
-    int inst_nr)
-{
-  if (inst_nr < 0)
-    return 0x18;
-  else
-    return inst_to_bank(inst_nr) << 12 | 0x0ff8;
 }
 
 
@@ -342,14 +346,10 @@ gen_inst(
     int dest1_input_reg,
     int dest2_input_reg)
 {
-  unsigned int inst_bank = inst_to_bank(inst_nr);
-
   unsigned int pd_page = FIRST_INST_PAGE + inst_nr * PAGES_PER_INST + PD_OFF;
   generate_pagetable(pd_page);
-  generate_idt(pd_page,
-	       inst_to_gdte(dest1_inst_nr), inst_to_gdte(dest2_inst_nr));
-  generate_inst_page(pd_page, 0x400000 + 0x010000 * inst_bank - 0x30);
-
+  generate_idt_page(pd_page, dest1_inst_nr, dest2_inst_nr);
+  generate_inst_page(pd_page, inst_nr);
   map_dest_tss(pd_page, inst_nr, dest_reg);
   if (dest1_inst_nr >= 0)
     map_src_tss(pd_page, dest1_inst_nr, dest1_input_reg);
