@@ -153,17 +153,18 @@ init_paging(void)
 }
 
 
+/* Encode a segment descriptor. */
 static void
-encode_gdte(
+encode_seg_descr(
     unsigned int *p,
     unsigned int type,
+    unsigned int g,
     unsigned int base,
     unsigned int limit)
 {
-  limit = limit >> 12;
   p[0] = ((base & 0xffff) << 16) | (limit & 0xffff);
   p[1] = ((base & 0xff000000)
-	  | 0x00c00000 |  (limit & 0x000f0000)
+	  | 0x00400000 | (g << 23) | (limit & 0x000f0000)
 	  | (type << 8)
 	  | ((base & 0x00ff0000) >> 16));
 }
@@ -173,12 +174,12 @@ static void
 init_gdt(unsigned int *gdt)
 {
   memset(gdt, 0, 4096 * 4);
-  encode_gdte(&gdt[2], 0x9A, 0, 0xfffffff);  /* code 0x08 */
-  encode_gdte(&gdt[4], 0x92, 0, 0xfffffff);  /* data 0x10 */
-  encode_gdte(&gdt[6], 0x89, (unsigned int)x86_tss, 0xfffff);  /* TSS 0x18 */
-  encode_gdte(&gdt[0x7fe], 0x89, 0x40ffd0, 0xfffff);
-  encode_gdte(&gdt[0xbfe], 0x89, 0x41ffd0, 0xfffff);
-  encode_gdte(&gdt[0xffe], 0x89, 0x42ffd0, 0xfffff);
+  encode_seg_descr(&gdt[2], 0x9A, 1, 0, 0xffff);  // code 0x08
+  encode_seg_descr(&gdt[4], 0x92, 1, 0, 0xffff);  // data 0x10
+  encode_seg_descr(&gdt[6], 0x89, 0, (unsigned int)x86_tss, 0x67);  // TSS 0x18
+  encode_seg_descr(&gdt[0x7fe], 0x89, 0, 0x40ffd0, 0x67);
+  encode_seg_descr(&gdt[0xbfe], 0x89, 0, 0x41ffd0, 0x67);
+  encode_seg_descr(&gdt[0xffe], 0x89, 0, 0x42ffd0, 0x67);
 }
 
 
@@ -301,7 +302,7 @@ generate_inst_page(
   p[1019] = (PROG_BASE_PAGE + pd_page) << 12;  /* CR3 */
   p[1020] = 0xfffefff;  /* EIP */
   p[1021] = read_eflags();  /* EFLAGS */
-  encode_gdte(&p[1022], 137, base, 0x0fffffff);  /* EAX and EDX */
+  encode_seg_descr(&p[1022], 137, 0, base, 0x67);  /* EAX and EDX */
 }
 
 
