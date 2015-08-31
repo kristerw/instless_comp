@@ -257,7 +257,7 @@ inst_to_bank(
 
 
 static unsigned int
-inst_to_gdte(
+inst_to_tss_seg_descr(
     int inst_nr)
 {
   if (inst_nr < 0)
@@ -275,8 +275,8 @@ generate_idt_page(
     int dest2_inst_nr)
 {
   unsigned int *p = PROGPAGE2VIRT(pd_page + IDT_OFF);
-  unsigned int tss_seg_selector1 = inst_to_gdte(dest1_inst_nr);
-  unsigned int tss_seg_selector2 = inst_to_gdte(dest2_inst_nr);
+  unsigned int tss_seg_selector1 = inst_to_tss_seg_descr(dest1_inst_nr);
+  unsigned int tss_seg_selector2 = inst_to_tss_seg_descr(dest2_inst_nr);
 
   /* #DF - Double Fault */
   p[16] = tss_seg_selector2 << 16;
