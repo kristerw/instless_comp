@@ -125,7 +125,7 @@ def find_max_reg_nr(insts):
 
 
 def get_int(string):
-    if string[0:1] == '0x':
+    if string[0:2] == '0x':
         return int(string, 16)
     else:
         return int(string)
