@@ -57,6 +57,8 @@ def parse_movdbz(tokens, line_no):
             tokens[8][1] != ',' or
             tokens[9][0] != 'label'):
         raise ParseError(line_no, 'Syntax error')
+    if tokens[5][1] == 'discard':
+        raise ParseError(line_no, 'Invalid input register "discard"')
     return (line_no, tokens[0][1], tokens[2][1],
             tokens[3][1], tokens[5][1],
             tokens[7][1], tokens[9][1])
