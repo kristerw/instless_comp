@@ -249,21 +249,37 @@ generate_pagetable(
 
 
 static unsigned int
-inst_to_bank(
-    int inst_nr)
-{
-  return (inst_nr % 3) + 1;
-}
-
-
-static unsigned int
 inst_to_tss_seg_descr(
     int inst_nr)
 {
   if (inst_nr < 0)
     return 0x18;
   else
-    return inst_to_bank(inst_nr) << 12 | 0x0ff8;
+    switch (inst_nr % 3)
+      {
+      case 0:
+	return 0x1ff8;
+      case 1:
+	return 0x2ff8;
+      default:
+	return 0x3ff8;
+      }
+}
+
+
+static unsigned int
+inst_to_tss_addr(
+    int inst_nr)
+{
+  switch (inst_nr % 3)
+    {
+    case 0:
+      return INST_ADDRESS + 0x0ffd0;
+    case 1:
+      return INST_ADDRESS + 0x1ffd0;
+    default:
+      return INST_ADDRESS + 0x2ffd0;
+    }
 }
 
 
@@ -297,12 +313,11 @@ generate_inst_page(
     int inst_nr)
 {
   unsigned int *p = PROGPAGE2VIRT(pd_page + INST_OFF);
-  unsigned int inst_bank = inst_to_bank(inst_nr);
-  unsigned int base = 0x400000 + 0x010000 * inst_bank - 0x30;
+  unsigned int tss_addr = inst_to_tss_addr(inst_nr);
   p[1019] = (PROG_BASE_PAGE + pd_page) << 12;  /* CR3 */
   p[1020] = 0xfffefff;  /* EIP */
   p[1021] = read_eflags();  /* EFLAGS */
-  encode_seg_descr(&p[1022], 137, 0, base, 0x67);  /* EAX and EDX */
+  encode_seg_descr(&p[1022], 137, 0, tss_addr, 0x67);  /* EAX and EDX */
 }
 
 
@@ -315,11 +330,12 @@ map_dest_tss(
     int reg_nr)
 {
   unsigned int *p1 = PROGPAGE2VIRT(pd_page + INST_PT_OFF);
-  unsigned int inst_bank = inst_to_bank(inst_nr);
+  unsigned int tss_addr = inst_to_tss_addr(inst_nr);
+  unsigned int seg_descr = inst_to_tss_seg_descr(inst_nr);
 
-  p1[(inst_bank << 4) - 1]
-    = PG_P | PG_W | ((PROG_BASE_PAGE + GDT_PAGE0 + inst_bank) << 12);
-  p1[(inst_bank << 4)]
+  p1[((tss_addr & 0x003ff000) >> 12)]
+    = PG_P | PG_W | ((PROG_BASE_PAGE + GDT_PAGE0 + (seg_descr >> 12)) << 12);
+  p1[((tss_addr & 0x003ff000) >> 12) + 1]
     = PG_P | PG_W | ((PROG_BASE_PAGE + REG_R0_PAGE + reg_nr) << 12);
 }
 
@@ -333,11 +349,12 @@ map_src_tss(
     int reg_nr)
 {
   unsigned int *p1 = PROGPAGE2VIRT(pd_page + INST_PT_OFF);
-  unsigned int inst_bank = inst_to_bank(inst_nr);
-  
-  p1[(inst_bank << 4) - 1]
-    = PG_P | PG_W | ((PROG_BASE_PAGE + FIRST_INST_PAGE + inst_nr * PAGES_PER_INST + INST_OFF) << 12);
-  p1[(inst_bank << 4)]
+  unsigned int tss_addr = inst_to_tss_addr(inst_nr);
+  unsigned int inst_off = inst_nr * PAGES_PER_INST + INST_OFF;
+
+  p1[((tss_addr & 0x003ff000) >> 12)]
+    = PG_P | PG_W | ((PROG_BASE_PAGE + FIRST_INST_PAGE + inst_off) << 12);
+  p1[((tss_addr & 0x003ff000) >> 12) + 1]
     = PG_P | PG_W | ((PROG_BASE_PAGE + REG_R0_PAGE + reg_nr) << 12);
 }
 
