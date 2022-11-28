@@ -174,8 +174,8 @@ static void
 init_gdt(unsigned int *gdt)
 {
   memset(gdt, 0, 4096 * 4);
-  encode_seg_descr(&gdt[2], 0x9A, 1, 0, 0xffff);  // code 0x08
-  encode_seg_descr(&gdt[4], 0x92, 1, 0, 0xffff);  // data 0x10
+  encode_seg_descr(&gdt[2], 0x9A, 1, 0, 0xfffff);  // code 0x08
+  encode_seg_descr(&gdt[4], 0x92, 1, 0, 0xfffff);  // data 0x10
   encode_seg_descr(&gdt[6], 0x89, 0, (unsigned int)x86_tss, 0x67);  // TSS 0x18
   encode_seg_descr(&gdt[0x7fe], 0x89, 0, 0x40ffd0, 0x67);
   encode_seg_descr(&gdt[0xbfe], 0x89, 0, 0x41ffd0, 0x67);
