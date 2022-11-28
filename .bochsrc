@@ -2,7 +2,7 @@
 plugin_ctrl: unmapped=1, biosdev=1, speaker=1, extfpuirq=1, gameport=1, pci_ide=1, acpi=1, ioapic=1
 config_interface: textconfig
 display_library: sdl
-memory: host=2048, guest=176
+memory: host=2048, guest=2048
 romimage: file="/usr/share/bochs/BIOS-bochs-latest"
 vgaromimage: file="/usr/share/bochs/VGABIOS-lgpl-latest"
 boot: disk
